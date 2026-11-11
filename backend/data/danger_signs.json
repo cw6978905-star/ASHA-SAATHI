@@ -1,0 +1,475 @@
+{
+  "metadata": {
+    "verification_status": "preliminary_pending_person_c_verification",
+    "pending_person_c_verification": true,
+    "guideline_note": "Preliminary configurable multilingual danger-sign phrase dictionary for AI Brain development and testing across 10 Gnani Prisma/Timbre v3.0 languages. Person C must supply/verify official guideline-backed danger signs, regional clinical phrases, and authoritative source citations before clinical deployment.",
+    "supported_languages": [
+      "hi-IN", "en-IN", "ta-IN", "te-IN", "bn-IN",
+      "mr-IN", "gu-IN", "kn-IN", "ml-IN", "pa-IN"
+    ],
+    "default_referral_messages": {
+      "hi-en": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "en": "This is a danger sign. Please refer the patient to the nearest PHC immediately.",
+      "en-IN": "This is a danger sign. Please refer the patient to the nearest PHC immediately.",
+      "hi": "यह एक खतरे का संकेत है। कृपया मरीज को तुरंत नजदीकी पीएचसी (PHC) में रेफर करें।",
+      "hi-IN": "यह एक खतरे का संकेत है। कृपया मरीज को तुरंत नजदीकी पीएचसी (PHC) में रेफर करें।",
+      "ta-IN": "இது ஒரு அபாய அறிகுறி. தயவுசெய்து நோயாளியை உடனடியாக அருகிலுள்ள PHC-க்கு பரிந்துரைக்கவும்.",
+      "te-IN": "ఇది ప్రమాద సంకేతం. దయచేసి రోగిని వెంటనే సమీపంలోని PHCకి రిఫర్ చేయండి.",
+      "bn-IN": "এটি একটি বিপদ সংকেত। অনুগ্রহ করে রোগীকে এখনই নিকটস্থ PHC-তে রেফার করুন।",
+      "mr-IN": "हे धोक्याचे लक्षण आहे. कृपया रुग्णाला तात्काळ जवळच्या PHC मध्ये रेफर करा.",
+      "gu-IN": "આ એક જોખમી સંકેત છે. કૃપા કરીને દર્દીને તરત જ નજીકના PHC માં રિફર કરો.",
+      "kn-IN": "ಇದು ಅಪಾಯದ ಲಕ್ಷಣವಾಗಿದೆ. ದಯವಿಟ್ಟು ರೋಗಿಯನ್ನು ತಕ್ಷಣ ಹತ್ತಿರದ PHC ಗೆ ರೆಫರ್ ಮಾಡಿ.",
+      "ml-IN": "ഇതൊരു അപകട ലക്ഷണമാണ്. ദയവായി രോഗിയെ ഉടൻ അടുത്തുള്ള PHC-യിലേക്ക് റഫർ ചെയ്യുക.",
+      "pa-IN": "ਇਹ ਇੱਕ ਖ਼ਤਰੇ ਦਾ ਸੰਕੇਤ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਮਰੀਜ਼ ਨੂੰ ਤੁਰੰਤ ਨਜ਼ਦੀਕੀ PHC ਵਿੱਚ ਰੈਫਰ ਕਰੋ।"
+    }
+  },
+  "danger_signs": [
+    {
+      "id": "severe_bleeding",
+      "category": "maternal",
+      "english_name": "Vaginal or Severe Bleeding",
+      "english_keywords": [
+        "vaginal bleeding", "heavy bleeding", "severe bleeding",
+        "bleeding during pregnancy", "postpartum bleeding", "bleeding",
+        "blood loss", "hemorrhage", "spotting"
+      ],
+      "hindi_phrases": [
+        "khoon beh raha hai", "khoon aa raha hai", "bahut khoon ja raha hai",
+        "jyada khoon gir raha hai", "bleeding ho rahi hai", "bleeding ho raha hai",
+        "khoon ka daag", "khoon nikal raha hai", "raktasrav",
+        "खून बह रहा है", "खून आ रहा है", "ज्यादा खून", "ब्लीडिंग हो रही है", "रक्तस्राव"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["खून बह रहा है", "ज्यादा खून", "रक्तस्राव"],
+          "ta-IN": ["அதிக இரத்தப்போக்கு", "இரத்தப்போக்கு உள்ளது", "ரத்தப்போக்கு"],
+          "te-IN": ["అధిక రక్తస్రావం", "రక్తస్రావం అవుతోంది", "రక్తం కారుతోంది"],
+          "bn-IN": ["অতিরিক্ত রক্তপাত", "রক্তপাত হচ্ছে", "রক্তস্রাব"],
+          "mr-IN": ["जास्त रक्तस्राव", "रक्तस्राव होत आहे", "रक्त जात आहे"],
+          "gu-IN": ["વધારે લોહી વહે છે", "રક્તસ્ત્રાવ થાય છે", "લોહી પડે છે"],
+          "kn-IN": ["ಅತಿಯಾದ ರಕ್ತಸ್ರಾವ", "ರಕ್ತಸ್ರಾವ ಆಗುತ್ತಿದೆ", "ರಕ್ತ ಹೋಗುತ್ತಿದೆ"],
+          "ml-IN": ["അമിത രക്തസ്രാവം", "രക്തസ്രാവം ഉണ്ട്", "രക്തം പോകുന്നു"],
+          "pa-IN": ["ਬਹੁਤ ਖੂਨ ਵਹਿ ਰਿਹਾ ਹੈ", "ਖੂਨ ਆ ਰਿਹਾ ਹੈ", "ਰਕਤਸ੍ਰਾਵ"]
+        },
+        "transliterations": [
+          "iratthappokku", "ratthapokku", "rakthasravam", "roktopat",
+          "raktasraav", "lohi vahe che", "raktasrava", "rakthasravam", "khun aa riha"
+        ],
+        "code_mixed": [
+          "bleeding irukku", "bleeding aaguthu", "bleeding avuthundi",
+          "bleeding hocche", "bleeding hot aahe", "bleeding thay chhe",
+          "bleeding aagtide", "bleeding aayi", "bleeding ho riha"
+        ],
+        "spelling_variations": ["bleading", "khun", "rakthasrav", "rattha pokku"]
+      },
+      "description": "Any vaginal bleeding during pregnancy or heavy bleeding after delivery.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "high_fever",
+      "category": "general",
+      "english_name": "High Fever",
+      "english_keywords": [
+        "high fever", "fever", "very hot to touch", "high temperature",
+        "chills with fever", "rigors"
+      ],
+      "hindi_phrases": [
+        "tez bukhar", "tej bukhar", "bahut bukhar", "bukhar hai", "bukhaar hai",
+        "high fever hai", "sharir bahut garam", "garam lag raha hai", "bukhar ho gaya",
+        "तेज बुखार", "बुखार है", "शरीर बहुत गर्म"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["तेज बुखार", "तेज़ बुखार", "बुखार है", "बुखार लग रहा", "बुखार"],
+          "ta-IN": ["அதிக காய்ச்சல்", "காய்ச்சல் உள்ளது", "உடல் மிகவும் சூடாக உள்ளது"],
+          "te-IN": ["అధిక జ్వరం", "తీవ్రమైన జ్వరం", "జ్వరం ఉంది"],
+          "bn-IN": ["তীব্র জ্বর", "খুব জ্বর", "জ্বর হয়েছে"],
+          "mr-IN": ["खूप ताप", "ताप आहे", "तीव्र ताप"],
+          "gu-IN": ["ખૂબ તાવ", "તેજ તાવ", "તાવ છે"],
+          "kn-IN": ["ತೀವ್ರ ಜ್ವರ", "ಹೆಚ್ಚು ಜ್ವರ", "ಜ್ವರ ಇದೆ"],
+          "ml-IN": ["കടുത്ത പനി", "ഉയർന്ന പനി", "പനി ഉണ്ട്"],
+          "pa-IN": ["ਤੇਜ਼ ਬੁਖਾਰ", "ਬੁਖਾਰ ਹੈ", "ਬਹੁਤ ਬੁਖਾਰ", "ਬੁਖਾਰ ਲੱਗਦਾ", "ਬੁਖਾਰ"]
+        },
+        "transliterations": [
+          "kaichal", "kaychal", "jwaram", "jwara", "jwor", "taap",
+          "taav", "jwara ide", "pani undu", "tez bukhaar"
+        ],
+        "code_mixed": [
+          "high fever irukku", "fever vandhuduchu", "fever vachindi",
+          "high fever ache", "fever aahe", "fever chhe",
+          "fever ide", "fever undu", "fever hai"
+        ],
+        "spelling_variations": ["bukhaar", "bhukhar", "feaver", "jwar", "taav"]
+      },
+      "description": "High body temperature or fever in pregnant woman, mother, or newborn.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "convulsions",
+      "category": "general",
+      "english_name": "Convulsions or Seizures",
+      "english_keywords": [
+        "convulsions", "convulsion", "seizure", "seizures", "fits",
+        "jerking movements", "twitching"
+      ],
+      "hindi_phrases": [
+        "daure pad rahe", "daura pada", "daure aa rahe", "jhatke aa rahe",
+        "jhatka lag raha", "mirgi ke daure", "haath pair akadne", "fits aa rahe",
+        "दौरे पड़ रहे", "दौरा पड़ा", "झटके आ रहे"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["दौरे पड़ रहे", "दौरा पड़ा", "झटके आ रहे"],
+          "ta-IN": ["வலிப்பு", "வலிப்பு வருகிறது", "கை கால் இழுப்பு"],
+          "te-IN": ["ఫిట్స్", "మూర్ఛ", "వణుకు వస్తోంది"],
+          "bn-IN": ["খিঁচুনি", "খিঁচুনি হচ্ছে"],
+          "mr-IN": ["झटके येत आहेत", "आकडी येत आहे", "फिट्स"],
+          "gu-IN": ["ખેંચ આવે છે", "તાણ આવે છે", "આંચકી"],
+          "kn-IN": ["ಸೆಳೆತ", "ಫಿಟ್ಸ್ ಬರುತ್ತಿದೆ", "ಮೂರ್ಛೆ"],
+          "ml-IN": ["അപസ്മാരം", "സന്നി", "വിറയൽ വരുന്നു"],
+          "pa-IN": ["ਦੌਰੇ ਪੈ ਰਹੇ", "ਝਟਕੇ ਆ ਰਹੇ", "ਮਿਰਗੀ ਦਾ ਦੌਰਾ"]
+        },
+        "transliterations": [
+          "valippu", "moorcha", "khichuni", "aakdi", "khench", "seleta", "sanni", "daure"
+        ],
+        "code_mixed": [
+          "fits varuthu", "fits vastunnayi", "fits asche",
+          "fits yetat", "fits aave chhe", "fits baruttide", "fits varunnu"
+        ],
+        "spelling_variations": ["fitts", "convultion", "jhatke", "daura"]
+      },
+      "description": "Fits, seizures, or involuntary jerking/stiffening episodes.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "breathing_difficulty",
+      "category": "newborn",
+      "english_name": "Fast Breathing or Difficulty Breathing",
+      "english_keywords": [
+        "difficulty breathing", "breathing difficulty", "fast breathing",
+        "rapid breathing", "shortness of breath", "trouble breathing",
+        "chest indrawing", "grunting", "gasping"
+      ],
+      "hindi_phrases": [
+        "saans lene mein takleef", "saans lene me dikkat", "saans phool rahi hai",
+        "saans tez chal rahi", "tez saans", "pasli chal rahi hai", "pasliyaan chal rahi",
+        "saans nahi le pa raha", "saans atak rahi",
+        "सांस लेने में तकलीफ", "सांस फूल रही है", "तेज सांस", "पसली चल रही है"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["सांस लेने में तकलीफ", "सांस फूल रही है", "तेज सांस"],
+          "ta-IN": ["மூச்சுத் திணறல்", "வேகமாக மூச்சு", "மூச்சு விட சிரமம்"],
+          "te-IN": ["శ్వాస తీసుకోవడంలో ఇబ్బంది", "వేగంగా శ్వాస", "ఊపిరి ఆడటం లేదు"],
+          "bn-IN": ["শ্বাসকষ্ট", "দ্রুত শ্বাস", "শ্বাস নিতে কষ্ট"],
+          "mr-IN": ["श्वास घेण्यास त्रास", "जलद श्वास", "दम लागणे"],
+          "gu-IN": ["શ્વાસ લેવામાં તકલીફ", "ઝડપી શ્વાસ", "શ્વાસ ચડે છે"],
+          "kn-IN": ["ಉಸಿರಾಟದ ತೊಂದರೆ", "ವೇಗದ ಉಸಿರಾಟ", "ಉಸಿರು ಕಟ್ಟುವುದು"],
+          "ml-IN": ["ശ്വാസതടസ്സം", "വേഗത്തിലുള്ള ശ്വാസം", "ശ്വാസം മുട്ടൽ"],
+          "pa-IN": ["ਸਾਹ ਲੈਣ ਵਿੱਚ ਤਕਲੀਫ਼", "ਤੇਜ਼ ਸਾਹ", "ਸਾਹ ਫੁੱਲ ਰਿਹਾ"]
+        },
+        "transliterations": [
+          "moochu thinaral", "moochu siramam", "oopiri aadadam ledu",
+          "shwaskashto", "dam lagto", "shwas levama taklif", "usiratada tondare",
+          "shwasathadassam", "saah phull riha"
+        ],
+        "code_mixed": [
+          "breathing problem irukku", "fast breathing undi",
+          "breathing difficulty ache", "breathing problem aahe", "breathing problem chhe"
+        ],
+        "spelling_variations": ["sans", "saans", "breathless", "shwas"]
+      },
+      "description": "Fast breathing, chest indrawing, grunting, or difficulty breathing.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "unconsciousness_lethargy",
+      "category": "general",
+      "english_name": "Unconsciousness or Severe Lethargy",
+      "english_keywords": [
+        "unconscious", "loss of consciousness", "unresponsive",
+        "not waking up", "severe lethargy", "very weak and drowsy",
+        "limp", "not moving"
+      ],
+      "hindi_phrases": [
+        "behosh ho gayi", "behosh hai", "behoshi", "hosh nahi hai",
+        "hosh mein nahi", "uth nahi rahi", "hil dul nahi raha",
+        "bilkul sust hai", "bahut sust", "sust sa lag raha",
+        "बेहोश है", "होश नहीं है", "हिल डुल नहीं रहा", "बहुत सुस्त"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["बेहोश है", "होश नहीं है", "बहुत सुस्त"],
+          "ta-IN": ["மயக்கம்", "நினைவு இல்லை", "மிகவும் சோர்வாக"],
+          "te-IN": ["అపస్మారక స్థితి", "స్పృహ లేదు", "చాలా నీరసంగా"],
+          "bn-IN": ["অজ্ঞান", "হুঁশ নেই", "খুবই নিস্তেজ"],
+          "mr-IN": ["बेशुद्ध", "शुद्धीवर नाही", "खूप सुस्त"],
+          "gu-IN": ["બેભાન", "ભાન નથી", "ખૂબ સુસ્ત"],
+          "kn-IN": ["ಪ್ರಜ್ಞೆ ತಪ್ಪಿದೆ", "ಪ್ರಜ್ಞೆ ಇಲ್ಲ", "ತುಂಬಾ ನಿತ್ರಾಣ"],
+          "ml-IN": ["അബോധാവസ്ഥ", "ബോധമില്ല", "വളരെ ക്ഷീണിതൻ"],
+          "pa-IN": ["ਬੇਹੋਸ਼ ਹੈ", "ਹੋਸ਼ ਨਹੀਂ", "ਬਹੁਤ ਸੁਸਤ"]
+        },
+        "transliterations": [
+          "mayakkam", "ninaivu illai", "spruha ledu", "oggyan",
+          "beshuddha", "bebhan", "prajne illa", "bodhamilla", "behosh"
+        ],
+        "code_mixed": [
+          "unconscious aahe", "unconscious aayi", "respond cheyatledu", "active illai"
+        ],
+        "spelling_variations": ["behoshi", "unconsious", "sust"]
+      },
+      "description": "Unconsciousness, unresponsiveness, or extreme lethargy.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "poor_feeding_newborn",
+      "category": "newborn",
+      "english_name": "Poor Feeding or Unable to Breastfeed",
+      "english_keywords": [
+        "unable to feed", "not feeding", "not breastfeeding",
+        "refusing to feed", "poor feeding", "poor sucking", "stopped feeding"
+      ],
+      "hindi_phrases": [
+        "doodh nahi pi raha", "doodh nahi pee raha", "doodh peena band",
+        "doodh kam pi raha", "stanpaan nahi kar raha", "feed nahi kar raha",
+        "doodh nahi pakad pa raha", "दूध नहीं पी रहा", "दूध पीना बंद", "स्तनपान नहीं कर रहा"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["दूध नहीं पी रहा", "दूध पीना बंद"],
+          "ta-IN": ["பால் குடிக்கவில்லை", "தாய்ப்பால் குடிக்க மறுக்கிறது"],
+          "te-IN": ["పాలు తాగడం లేదు", "తల్లిపాలు తాగలేకపోతోంది"],
+          "bn-IN": ["দুধ খাচ্ছে না", "বুকের দুধ টানতে পারছে না"],
+          "mr-IN": ["दूध पीत नाही", "स्तनपान करत नाही"],
+          "gu-IN": ["દૂધ પીતું નથી", "ધાવણ નથી લેતું", "ધાવણ લેતું નથી"],
+          "kn-IN": ["ಹಾಲು ಕುಡಿಯುತ್ತಿಲ್ಲ", "ಎದೆಹಾಲು ಕುಡಿಯುತ್ತಿಲ್ಲ"],
+          "ml-IN": ["പാൽ കുടിക്കുന്നില്ല", "മുലപ്പാൽ കുടിക്കുന്നില്ല"],
+          "pa-IN": ["ਦੁੱਧ ਨਹੀਂ ਪੀ ਰਿਹਾ", "ਦੁੱਧ ਪੀਣਾ ਬੰਦ"]
+        },
+        "transliterations": [
+          "paal kudikkavillai", "paalu thaagadam ledu", "dudh khachhe na",
+          "doodh peet nahi", "haalu kudiyuttilla", "paal kudikkunnilla"
+        ],
+        "code_mixed": [
+          "feeding illa", "feed cheyatledu", "feeding korche na", "feeding nahi karta"
+        ],
+        "spelling_variations": ["dudh nahi pi", "doodh nahi pee"]
+      },
+      "description": "Newborn unable to suck or refusing to breastfeed.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "severe_headache_blurred_vision",
+      "category": "maternal",
+      "english_name": "Severe Headache with Blurred Vision or Swelling",
+      "english_keywords": [
+        "severe headache", "blurred vision", "blurry vision",
+        "vision changes", "swelling of face and hands", "seeing spots"
+      ],
+      "hindi_phrases": [
+        "tez sar dard", "bahut sar dard", "sir dard aur dhundhla",
+        "dhundhla dikh raha", "aankhon ke aage andhera", "chehre aur haath mein sujan",
+        "तेज सर दर्द", "धुंधला दिख रहा", "आंखों के आगे अंधेरा"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["तेज सर दर्द", "धुंधला दिख रहा"],
+          "ta-IN": ["கடுமையான தலைவலி", "மங்கலான பார்வை"],
+          "te-IN": ["తీవ్రమైన తలనొప్పి", "మసకబారిన చూపు"],
+          "bn-IN": ["তীব্র মাথাব্যথা", "ঝাপসা দেখা"],
+          "mr-IN": ["तीव्र डोकेदुखी", "धूसर दिसणे"],
+          "gu-IN": ["તીવ્ર માથાનો દુખાવો", "ઝાંખું દેખાવું"],
+          "kn-IN": ["ತೀವ್ರ ತಲೆನೋವು", "ಮಸುಕಾದ ದೃಷ್ಟಿ"],
+          "ml-IN": ["കഠിനമായ തലവേദന", "കാഴ്ച മങ്ങൽ"],
+          "pa-IN": ["ਤੇਜ਼ ਸਿਰ ਦਰਦ", "ਧੁੰਦਲਾ ਦਿਖਾਈ ਦੇਣਾ"]
+        },
+        "transliterations": ["kadumaiyana thalaivali", "talanoppi", "mathabyatha", "dokedukhi", "talenovu", "thalavedana"],
+        "code_mixed": ["blurred vision irukku", "severe headache undi", "vision blur aahe"],
+        "spelling_variations": ["soojan", "sir dard", "sar dard"]
+      },
+      "description": "Severe persistent headache, blurred vision, or sudden facial/hand swelling.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "reduced_fetal_movement",
+      "category": "maternal",
+      "english_name": "Reduced or Absent Fetal Movement",
+      "english_keywords": [
+        "reduced fetal movement", "no fetal movement",
+        "baby not moving in womb", "decreased baby movement", "stopped kicking"
+      ],
+      "hindi_phrases": [
+        "pet mein baccha hil nahi raha", "bacche ki halchal kam",
+        "baccha ghumna band", "movement kam ho gayi", "movement nahi ho rahi",
+        "पेट में बच्चा हिल नहीं रहा", "बच्चे की हलचल कम"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["पेट में बच्चा हिल नहीं रहा", "बच्चे की हलचल कम"],
+          "ta-IN": ["குழந்தை அசைவு இல்லை", "வயிற்றில் குழந்தை அசையவில்லை"],
+          "te-IN": ["కడుపులో బిడ్డ కదలికలు లేవు", "కదలికలు తగ్గాయి"],
+          "bn-IN": ["গর্ভে বাচ্চার নড়াচড়া কম", "বাচ্চা নড়ছে না"],
+          "mr-IN": ["पोटातील बाळाची हालचाल कमी", "बाळ हलत नाही"],
+          "gu-IN": ["પેટમાં બાળકનું હલનચલન ઓછું", "બાળક હલતું નથી"],
+          "kn-IN": ["ಗರ್ಭದಲ್ಲಿ ಮಗುವಿನ ಚಲನೆ ಕಡಿಮೆ", "ಮಗು ಚಲಿಸುತ್ತಿಲ್ಲ"],
+          "ml-IN": ["വയറ്റിൽ കുഞ്ഞിന്റെ അനക്കം കുറവ്", "കുഞ്ഞ് അനങ്ങുന്നില്ല"],
+          "pa-IN": ["ਪੇਟ ਵਿੱਚ ਬੱਚਾ ਹਿੱਲ ਨਹੀਂ ਰਿਹਾ", "ਬੱਚੇ ਦੀ ਹਲਚਲ ਘੱਟ"]
+        },
+        "transliterations": ["kuzhandai asaivu illai", "kadalikalu levu", "norachora kom"],
+        "code_mixed": ["fetal movement illai", "baby movement ledu", "movement kom"],
+        "spelling_variations": ["halchal kam", "movement nahi"]
+      },
+      "description": "Noticeable reduction or absence of fetal movement during pregnancy.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "severe_abdominal_pain",
+      "category": "maternal",
+      "english_name": "Severe Abdominal Pain",
+      "english_keywords": [
+        "severe abdominal pain", "severe stomach pain",
+        "intense abdominal pain", "unbearable stomach pain"
+      ],
+      "hindi_phrases": [
+        "bahut tez pet dard", "asahaniya pet dard", "pet mein bahut dard",
+        "pet dard bardasht nahi", "बहुत तेज पेट दर्द", "असहनीय पेट दर्द"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["बहुत तेज पेट दर्द"],
+          "ta-IN": ["கடுமையான வயிற்று வலி"],
+          "te-IN": ["తీవ్రమైన కడుపు నొప్పి"],
+          "bn-IN": ["তীব্র পেটে ব্যথা"],
+          "mr-IN": ["तीव्र पोटदुखी"],
+          "gu-IN": ["પેટમાં સખત દુખાવો"],
+          "kn-IN": ["ತೀವ್ರ ಹೊಟ್ಟೆ ನೋವು"],
+          "ml-IN": ["കഠിനമായ വയറുവേദന"],
+          "pa-IN": ["ਪੇਟ ਵਿੱਚ ਤੇਜ਼ ਦਰਦ"]
+        },
+        "transliterations": ["vayitru vali", "kadupu noppi", "pete byatha", "potdukhi", "hotte novu", "vayaruvethana"],
+        "code_mixed": ["severe stomach pain irukku", "severe abdominal pain undi"],
+        "spelling_variations": ["pet dard"]
+      },
+      "description": "Severe or unbearable abdominal pain in pregnancy or postpartum.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "umbilical_cord_infection",
+      "category": "newborn",
+      "english_name": "Umbilical Cord Infection or Pus",
+      "english_keywords": [
+        "pus from umbilical cord", "umbilical infection", "red umbilical cord",
+        "swollen umbilicus", "foul smell from cord"
+      ],
+      "hindi_phrases": [
+        "nabhi se mawad", "nabhi mein pas", "nabhi laal ho gayi",
+        "nabhi mein sujan", "naal mein infection",
+        "नाभि से मवाद", "नाभि लाल हो गई", "नाभि में सूजन"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["नाभि से मवाद", "नाभि लाल हो गई"],
+          "ta-IN": ["தொப்புள் கொடியில் சீழ்", "தொப்புள் சிவந்துள்ளது"],
+          "te-IN": ["బొడ్డు నుండి చీము", "బొడ్డు ఎర్రగా ఉంది"],
+          "bn-IN": ["নাভি থেকে পুঁজ", "নাভি লাল হয়ে গেছে"],
+          "mr-IN": ["नाभीतून पू", "नाभी लाल झाली आहे"],
+          "gu-IN": ["નાભિમાંથી પરુ", "નાભિ લાલ થઈ ગઈ છે"],
+          "kn-IN": ["ಹೊಕ್ಕುಳಿನಿಂದ ಕೀವು", "ಹೊಕ್ಕುಳು ಕೆಂಪಾಗಿದೆ"],
+          "ml-IN": ["പൊക്കിൾക്കൊടിയിൽ പഴുപ്പ്", "പൊക്കിൾ ചുവന്നിരിക്കുന്നു"],
+          "pa-IN": ["ਨਾਭੀ ਵਿੱਚੋਂ ਪੀਕ", "ਨਾਭੀ ਲਾਲ ਹੋ ਗਈ"]
+        },
+        "transliterations": ["thoppul seezh", "boddu cheemu", "nabhi puj", "nabhitun pu"],
+        "code_mixed": ["cord infection irukku", "pus from cord undi"],
+        "spelling_variations": ["mavad", "mawad"]
+      },
+      "description": "Redness, swelling, pus, or foul odor from the newborn umbilical stump.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "newborn_jaundice",
+      "category": "newborn",
+      "english_name": "Jaundice in Newborn (Yellow Palms/Soles or Early Jaundice)",
+      "english_keywords": [
+        "yellow palms", "yellow soles", "newborn jaundice",
+        "yellow eyes and skin", "jaundice"
+      ],
+      "hindi_phrases": [
+        "hatheli peeli", "talve peele", "piliya ho gaya",
+        "baccha peela pad raha", "aankhein peeli",
+        "पीलिया", "हथेली पीली", "बच्चा पीला"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["पीलिया", "हथेली पीली"],
+          "ta-IN": ["மஞ்சள் காமாலை", "கண்கள் மஞ்சளாக"],
+          "te-IN": ["పచ్చ కామెర్లు", "చర్మం పసుపు రంగులో"],
+          "bn-IN": ["জন্ডিস", "হলুদ হয়ে গেছে"],
+          "mr-IN": ["कावीळ", "पिवळसर त्वचा"],
+          "gu-IN": ["કમળો", "આંખો પીળી"],
+          "kn-IN": ["ಕಾಮಾಲೆ", "ಹಳದಿ ಬಣ್ಣ"],
+          "ml-IN": ["മഞ്ഞപ്പിത്തം", "മഞ്ഞ നിറം"],
+          "pa-IN": ["ਪੀਲੀਆ", "ਅੱਖਾਂ ਪੀਲੀਆਂ"]
+        },
+        "transliterations": ["manjal kamalai", "pachha kamerlu", "kawil", "kamalo", "kamale", "manjappitham"],
+        "code_mixed": ["jaundice irukku", "jaundice undi", "jaundice hoyeche"],
+        "spelling_variations": ["peeliya", "piliya"]
+      },
+      "description": "Yellow discoloration of skin, eyes, palms, or soles in a newborn.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    },
+    {
+      "id": "hypothermia_cold_baby",
+      "category": "newborn",
+      "english_name": "Cold to Touch / Hypothermia",
+      "english_keywords": [
+        "cold to touch", "hypothermia", "baby feels very cold", "low body temperature"
+      ],
+      "hindi_phrases": [
+        "baccha thanda pad raha", "sharir thanda hai", "haath pair thande",
+        "bahut thanda lag raha", "बच्चा ठंडा पड़ रहा", "शरीर ठंडा है"
+      ],
+      "regional_phrases": [],
+      "multilingual_phrases": {
+        "native_script": {
+          "hi-IN": ["बच्चा ठंडा पड़ रहा", "शरीर ठंडा है"],
+          "ta-IN": ["குழந்தை மிகவும் குளிராக உள்ளது", "உடல் ஜில்லுனு உள்ளது"],
+          "te-IN": ["బిడ్డ చాలా చల్లగా ఉంది", "శరీరం చల్లబడింది"],
+          "bn-IN": ["বাচ্চা খুব ঠান্ডা হয়ে গেছে", "শরীর ঠান্ডা"],
+          "mr-IN": ["बाळ खूप थंड पडले आहे", "शरीर थंड आहे"],
+          "gu-IN": ["બાળક ખૂબ ઠંડું પડી ગયું છે", "શરીર ઠંડું છે"],
+          "kn-IN": ["ಮಗು ತುಂಬಾ ತಣ್ಣಗಾಗಿದೆ", "ದೇಹ ತಣ್ಣಗಿದೆ"],
+          "ml-IN": ["കുഞ്ഞ് വളരെ തണുത്തിരിക്കുന്നു", "ശരീരം തണുത്തതാണ്"],
+          "pa-IN": ["ਬੱਚਾ ਬਹੁਤ ਠੰਡਾ ਪੈ ਰਿਹਾ", "ਸਰੀਰ ਠੰਡਾ ਹੈ"]
+        },
+        "transliterations": ["kuliraga ullathu", "challaga undi", "thanda hoye geche", "tannagagide", "thanuthirikunnu"],
+        "code_mixed": ["baby cold aa irukku", "baby thanda pad gaya"],
+        "spelling_variations": ["thanda"]
+      },
+      "description": "Newborn feels abnormally cold to touch.",
+      "referral_message": "Yeh ek danger sign hai. Kripya patient ko abhi nearest PHC refer karein.",
+      "source_reference": "PENDING_PERSON_C_VERIFICATION"
+    }
+  ]
+}
