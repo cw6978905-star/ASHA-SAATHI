@@ -21,7 +21,6 @@
 <button id="talk" disabled>Tap once to start</button>
 <div id="banner" style="display:none;background:#c0392b;color:#fff;font-size:28px;padding:16px;border-radius:12px;margin-top:12px;">REFER TO PHC NOW</div>
 <pre id="form" style="font-size:16px;"></pre>
-<div id="banner" style="display:none;background:#c0392b;color:#fff;font-size:28px;padding:16px;border-radius:12px;margin-top:12px;">REFER TO PHC NOW</div>
 <div id="log"></div>
 
 <script>
@@ -47,12 +46,11 @@ function connect() {
     if (m.type === "transcript") logEl.textContent += "You: " + m.text + "\n";
     else if (m.type === "tts_start") { ignoreAudio = false; statusEl.textContent = "speaking"; }
     else if (m.type === "tts_end") { if (!streaming) statusEl.textContent = "ready"; }
-        else if (m.type === "brain") {
+    else if (m.type === "brain") {
       document.getElementById("form").textContent = JSON.stringify(m.form_state, null, 2);
-      document.getElementById("banner").style.display = m.danger_flag ? "block" : "none";
-    }
-        else if (m.type === "brain") {
-      document.getElementById("banner").style.display = m.danger_flag ? "block" : "none";
+      const isDanger = Boolean(m.danger_flag || m.danger_detected || (m.danger_flags && m.danger_flags.length));
+      document.getElementById("banner").style.display = isDanger ? "block" : "none";
+      if (m.reply_text) logEl.textContent += "Assistant: " + m.reply_text + "\n";
     }
     else if (m.type === "error") logEl.textContent += "ERROR: " + m.message + "\n";
   };
