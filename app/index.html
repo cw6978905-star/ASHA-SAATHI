@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ASHA Saathi - आषा साथी</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts for warm, elegant typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Traditional Header with Decorative Motif -->
+    <header class="app-header">
+      <div class="brand-title">
+        <span class="lotus-icon">🪷</span>
+        <div>
+          <h1>ASHA Saathi</h1>
+          <p class="subtitle">आषा साथी • Voice Field Assistant</p>
+        </div>
+      </div>
+      <div class="status-badge" id="status-badge">Ready</div>
+    </header>
+
+    <!-- AI Disclosure Banner -->
+    <div class="ai-disclosure">
+      ✨ <em>Voice Agent Active. Always verify clinical data before saving.</em>
+    </div>
+
+    <!-- Danger Alert Banner (Hidden by default, pulses with urgency) -->
+    <div class="danger-banner hidden" id="danger-banner">
+      🚨 <strong id="danger-title">DANGER SIGN DETECTED</strong>
+      <p id="danger-msg">Immediate PHC referral required!</p>
+    </div>
+
+    <!-- Voice Control & Metrics -->
+    <section class="voice-section card-traditional">
+      <div class="mic-glow-wrapper">
+        <button id="talk-btn" class="talk-btn">
+          <span class="mic-icon">🎙️</span> 
+          <span class="btn-text">Hold to Speak</span>
+        </button>
+      </div>
+      <div class="metrics">
+        <span>Response Latency: <strong id="latency-val">0</strong> ms</span>
+      </div>
+    </section>
+
+    <!-- Live Transcript -->
+    <section class="card-traditional">
+      <h3>📜 Live Transcript</h3>
+      <div class="transcript-box" id="transcript-box">
+        <em>Listening for voice input in Hindi/Regional mix...</em>
+      </div>
+    </section>
+
+    <!-- Visit Information Form -->
+    <section class="card-traditional">
+      <h3>📋 Visit Record Form</h3>
+      <form id="visit-form">
+        <div class="input-group">
+          <label>Beneficiary Name / ID</label>
+          <input type="text" id="field-name" placeholder="e.g. Sunita Devi (Synthetic)" />
+        </div>
+
+        <div class="input-group">
+          <label>Gestational / Child Age</label>
+          <input type="text" id="field-age" placeholder="e.g. 7 months pregnant / 3 weeks" />
+        </div>
+
+        <div class="input-group">
+          <label>Symptoms & Observations</label>
+          <textarea id="field-symptoms" placeholder="Extracted notes will fill here automatically..."></textarea>
+        </div>
+
+        <div class="input-group">
+          <label>Action & Referral Status</label>
+          <input type="text" id="field-action" placeholder="Standard home visit / Urgent PHC referral" />
+        </div>
+
+        <button type="button" id="save-btn" class="btn btn-save">✨ Confirm & Save Record</button>
+      </form>
+    </section>
+
+    <!-- Follow-up List (Innovation Point) -->
+    <section class="card-traditional">
+      <h3>🗓️ Upcoming Follow-ups & Vaccinations</h3>
+      <ul id="followup-list" class="followup-list">
+        <li class="empty-state">No saved visits yet. Complete a visit to track schedules.</li>
+      </ul>
+      <button id="clear-storage-btn" class="btn btn-danger-outline">🗑️ Delete All Local Data</button>
+    </section>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
