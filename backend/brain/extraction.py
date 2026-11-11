@@ -618,6 +618,8 @@ class ExtractionEngine:
                 last_output = raw_response
                 cleaned_json = _strip_json_fences(raw_response)
                 parsed_dict = json.loads(cleaned_json)
+                if not isinstance(parsed_dict, dict):
+                    raise ValueError("LLM extraction output must be a JSON object.")
                 payload = ExtractionPayload.model_validate(parsed_dict)
                 return self._apply_post_validation_guards(
                     payload=payload,
@@ -651,6 +653,9 @@ class ExtractionEngine:
                 existing_form=existing_form,
             )
             return ExtractionPayload.model_validate(fallback_dict)
+
+        if isinstance(last_error, LLMProviderError):
+            raise last_error
 
         raise ExtractionValidationError(
             f"Extraction failed after {self._max_retries + 1} attempts: {last_error}"
