@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASHA Voice</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 16px; background: #f4f4f4; }
+  #status { font-size: 20px; margin-bottom: 4px; }
+  #latency { font-size: 16px; color: #555; margin-bottom: 12px; }
+  #talk { width: 100%; height: 150px; font-size: 28px; border: none;
+          border-radius: 20px; background: #1a7f4b; color: #fff; }
+  #talk.active { background: #c0392b; }
+  #talk:disabled { background: #999; }
+  #log { margin-top: 16px; font-size: 22px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="status">connecting...</div>
+<div id="latency">latency: -</div>
+<button id="talk" disabled>Tap once to start</button>
+<div id="banner" style="display:none;background:#c0392b;color:#fff;font-size:28px;padding:16px;border-radius:12px;margin-top:12px;">REFER TO PHC NOW</div>
+<pre id="form" style="font-size:16px;"></pre>
+<div id="banner" style="display:none;background:#c0392b;color:#fff;font-size:28px;padding:16px;border-radius:12px;margin-top:12px;">REFER TO PHC NOW</div>
+<div id="log"></div>
+
+<script>
+const SR = 16000;
+const statusEl = document.getElementById("status");
+const latencyEl = document.getElementById("latency");
+const talk = document.getElementById("talk");
+const logEl = document.getElementById("log");
+let ws, ctx, node, streaming = false, micReady = false;
+let tRelease = 0, waitingFirstAudio = false;
+let nextTime = 0, leftover = null;
+let sources = [], ignoreAudio = false;
+
+function connect() {
+  const proto = location.protocol === "https:" ? "wss://" : "ws://";
+  ws = new WebSocket(proto + location.host + "/ws");
+  ws.binaryType = "arraybuffer";
+  ws.onopen = () => { statusEl.textContent = "connected"; talk.disabled = false; };
+  ws.onclose = () => { statusEl.textContent = "disconnected - reload the page"; talk.disabled = true; };
+  ws.onmessage = (e) => {
+    if (typeof e.data !== "string") { onAudio(e.data); return; }
+    const m = JSON.parse(e.data);
+    if (m.type === "transcript") logEl.textContent += "You: " + m.text + "\n";
+    else if (m.type === "tts_start") { ignoreAudio = false; statusEl.textContent = "speaking"; }
+    else if (m.type === "tts_end") { if (!streaming) statusEl.textContent = "ready"; }
+        else if (m.type === "brain") {
+      document.getElementById("form").textContent = JSON.stringify(m.form_state, null, 2);
+      document.getElementById("banner").style.display = m.danger_flag ? "block" : "none";
+    }
+        else if (m.type === "brain") {
+      document.getElementById("banner").style.display = m.danger_flag ? "block" : "none";
+    }
+    else if (m.type === "error") logEl.textContent += "ERROR: " + m.message + "\n";
+  };
+}
+
+function onAudio(buf) {
+  if (ignoreAudio) return;
+  if (waitingFirstAudio) {
+    waitingFirstAudio = false;
+    latencyEl.textContent = "latency: " + Math.round(performance.now() - tRelease) + " ms";
+  }
+  playChunk(buf);
+}
+
+function stopPlayback() {
+  sources.forEach((s) => { try { s.stop(); } catch (e) {} });
+  sources = [];
+  nextTime = 0;
+  leftover = null;
+}
+
+function playChunk(arrBuf) {
+  let bytes = new Uint8Array(arrBuf);
+  if (leftover) {
+    const m = new Uint8Array(leftover.length + bytes.length);
+    m.set(leftover); m.set(bytes, leftover.length);
+    bytes = m; leftover = null;
+  }
+  if (bytes.length % 2) {
+    leftover = bytes.slice(bytes.length - 1);
+    bytes = bytes.slice(0, bytes.length - 1);
+  }
+  if (bytes.length === 0) return;
+  const i16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.length / 2);
+  const f32 = new Float32Array(i16.length);
+  for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768;
+  const ab = ctx.createBuffer(1, f32.length, SR);
+  ab.copyToChannel(f32, 0);
+  const src = ctx.createBufferSource();
+  src.buffer = ab;
+  src.connect(ctx.destination);
+  const now = ctx.currentTime;
+  if (nextTime < now + 0.02) nextTime = now + 0.02;
+  src.start(nextTime);
+  nextTime += ab.duration;
+  sources.push(src);
+  src.onended = () => { sources = sources.filter((s) => s !== src); };
+}
+
+async function initMic() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+  });
+  ctx = new AudioContext({ sampleRate: SR });
+  const src = ctx.createMediaStreamSource(stream);
+  const code = `
+    class P extends AudioWorkletProcessor {
+      constructor() { super(); this.buf = new Int16Array(512); this.n = 0; }
+      process(inputs) {
+        const ch = inputs[0][0];
+        if (!ch) return true;
+        for (let i = 0; i < ch.length; i++) {
+          const s = Math.max(-1, Math.min(1, ch[i]));
+          this.buf[this.n++] = s < 0 ? s * 32768 : s * 32767;
+          if (this.n === 512) {
+            this.port.postMessage(this.buf.slice().buffer);
+            this.n = 0;
+          }
+        }
+        return true;
+      }
+    }
+    registerProcessor("pcm", P);`;
+  await ctx.audioWorklet.addModule(
+    URL.createObjectURL(new Blob([code], { type: "application/javascript" }))
+  );
+  node = new AudioWorkletNode(ctx, "pcm");
+  node.port.onmessage = (e) => {
+    if (streaming && ws.readyState === 1) ws.send(e.data);
+  };
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  src.connect(node);
+  node.connect(mute);
+  mute.connect(ctx.destination);
+}
+
+talk.addEventListener("pointerdown", async (e) => {
+  e.preventDefault();
+  if (!micReady) {
+    try {
+      await initMic();
+      await ctx.resume();
+      micReady = true;
+      talk.textContent = "Hold to talk";
+      ws.send('{"type":"hello"}');
+    } catch (err) {
+      statusEl.textContent = "mic error: " + err.message;
+    }
+    return;
+  }
+  // BARGE-IN: stop the agent the moment she presses the button
+  ignoreAudio = true;
+  stopPlayback();
+  waitingFirstAudio = false;
+  ws.send('{"type":"interrupt"}');
+
+  await ctx.resume();
+  streaming = true;
+  talk.classList.add("active");
+  talk.textContent = "Listening...";
+  statusEl.textContent = "listening";
+});
+
+function stopTalking() {
+  if (!streaming) return;
+  streaming = false;
+  talk.classList.remove("active");
+  talk.textContent = "Hold to talk";
+  statusEl.textContent = "processing...";
+  tRelease = performance.now();
+  waitingFirstAudio = true;
+  ws.send('{"type":"commit"}');
+}
+talk.addEventListener("pointerup", stopTalking);
+talk.addEventListener("pointerleave", stopTalking);
+
+connect();
+</script>
+</body>
+</html>
