@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=BACKEND_DIR / ".env", override=False)
+load_dotenv(dotenv_path=BACKEND_DIR.parent / ".env", override=False)
 
 
 DEFAULT_REQUIRED_FIELDS_BY_VISIT_TYPE: Dict[str, List[str]] = {
@@ -72,7 +73,7 @@ class SecretRedactingFilter(logging.Filter):
     """Logging filter that masks API keys and Bearer tokens if accidentally formatted."""
 
     _BEARER_PATTERN = re.compile(r"(Bearer\s+)[A-Za-z0-9\-._~+/]+=*", re.IGNORECASE)
-    _KEY_PATTERN = re.compile(r"(sk-|AIza|key=)[A-Za-z0-9\-_]{8,}")
+    _KEY_PATTERN = re.compile(r"(sk-|AIza|gsk_|AQ\.|key=)[A-Za-z0-9.\-_]{8,}")
 
     def __init__(self, secret_values: Optional[List[str]] = None) -> None:
         super().__init__()
@@ -87,13 +88,30 @@ class SecretRedactingFilter(logging.Filter):
         return True
 
     def _redact(self, text: str) -> str:
-        masked = text
-        for secret in self._secrets:
-            if secret in masked:
-                masked = masked.replace(secret, "[REDACTED]")
-        masked = self._BEARER_PATTERN.sub(r"\1[REDACTED]", masked)
-        masked = self._KEY_PATTERN.sub("[REDACTED_KEY]", masked)
-        return masked
+        return scrub_secrets(text, self._secrets)
+
+
+def scrub_secrets(text: str, extra_secrets: Optional[List[Optional[str]]] = None) -> str:
+    """Scrub API keys, Bearer tokens, and explicit secret strings from text."""
+    masked = text
+    for secret in extra_secrets or []:
+        if secret and len(secret) >= 6 and secret in masked:
+            masked = masked.replace(secret, "[REDACTED]")
+    masked = SecretRedactingFilter._BEARER_PATTERN.sub(r"\1[REDACTED]", masked)
+    masked = SecretRedactingFilter._KEY_PATTERN.sub("[REDACTED_KEY]", masked)
+    return masked
+
+
+def _parse_bool_env(var_name: str, default: Optional[bool] = None) -> Optional[bool]:
+    raw = os.getenv(var_name)
+    if raw is None or not raw.strip():
+        return default
+    cleaned = raw.strip().lower()
+    if cleaned in {"1", "true", "yes", "on"}:
+        return True
+    if cleaned in {"0", "false", "no", "off"}:
+        return False
+    return default
 
 
 @dataclass(frozen=True)
@@ -111,6 +129,9 @@ class Settings:
         default_factory=lambda: BACKEND_DIR / "data" / "danger_signs.json"
     )
     log_level: str = "INFO"
+    app_env: str = "development"
+    require_real_llm: bool = False
+    allow_deterministic_fallback: Optional[bool] = None
     ai_intro_messages: Dict[str, str] = field(
         default_factory=lambda: dict(DEFAULT_AI_INTRO_MESSAGES)
     )
@@ -145,6 +166,11 @@ def _resolve_api_key(provider: str) -> Optional[str]:
         val = os.getenv(fallback_var, "").strip()
         if val:
             return val
+    if provider == "auto":
+        for env_name in ("OPENAI_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY"):
+            val = os.getenv(env_name, "").strip()
+            if val:
+                return val
     return None
 
 
@@ -154,6 +180,11 @@ def load_settings() -> Settings:
     api_key = _resolve_api_key(provider)
     model = os.getenv("LLM_MODEL", "").strip() or None
     base_url = os.getenv("LLM_BASE_URL", "").strip() or None
+    app_env = os.getenv("APP_ENV", "development").strip().lower() or "development"
+    req_real = _parse_bool_env("REQUIRE_REAL_LLM")
+    if req_real is None:
+        req_real = app_env in {"production", "prod"}
+    allow_fallback = _parse_bool_env("ALLOW_DETERMINISTIC_FALLBACK")
 
     try:
         timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "20"))
@@ -183,6 +214,9 @@ def load_settings() -> Settings:
         app_timezone=os.getenv("APP_TIMEZONE", "Asia/Kolkata").strip() or "Asia/Kolkata",
         danger_signs_path=_resolve_danger_signs_path(os.getenv("DANGER_SIGNS_PATH")),
         log_level=os.getenv("LOG_LEVEL", "INFO").strip().upper() or "INFO",
+        app_env=app_env,
+        require_real_llm=req_real,
+        allow_deterministic_fallback=allow_fallback,
         ai_intro_messages=intro_messages,
     )
 
@@ -199,7 +233,18 @@ def configure_logging(settings: Optional[Settings] = None) -> logging.Logger:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    secrets = [cfg.llm_api_key] if cfg.llm_api_key else []
+    secrets = [
+        val
+        for val in (
+            cfg.llm_api_key,
+            os.getenv("LLM_API_KEY"),
+            os.getenv("OPENAI_API_KEY"),
+            os.getenv("GEMINI_API_KEY"),
+            os.getenv("ANTHROPIC_API_KEY"),
+            os.getenv("GNANI_API_KEY"),
+        )
+        if val
+    ]
     redactor = SecretRedactingFilter(secrets)
     for handler in logger.handlers:
         handler.filters = [

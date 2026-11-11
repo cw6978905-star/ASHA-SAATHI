@@ -3,23 +3,32 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from brain.correction import CorrectionEngine
 from brain.danger_detector import DangerDetector
-from brain.extraction import ExtractionEngine
+from brain.extraction import ExtractionEngine, ExtractionValidationError
 from brain.guardrails import MedicalGuardrails
 from brain.languages import (
     SUPPORTED_GNANI_LANGUAGES,
     get_tts_locale,
     normalize_language_code,
 )
-from brain.llm_client import BaseLLMClient, create_llm_client
+from brain.llm_client import (
+    BaseLLMClient,
+    LLMConfigurationError,
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+    create_llm_client,
+)
 from brain.state_manager import FormStateManager, SessionNotFoundError
-from config import Settings, configure_logging, load_settings
+from config import Settings, configure_logging, load_settings, scrub_secrets
 from models.visit_schema import (
     BrainProcessResponse,
     ConfirmRequest,
@@ -37,6 +46,51 @@ from models.visit_schema import (
 logger = logging.getLogger("asha_saathi.api")
 
 
+def register_exception_handlers(fastapi_app: FastAPI, settings: Optional[Settings] = None) -> None:
+    """Register secret-safe HTTP error handlers for LLM provider and validation failures."""
+    secrets = [settings.llm_api_key] if settings and settings.llm_api_key else []
+
+    def _safe_detail(exc: Exception) -> str:
+        return scrub_secrets(str(exc), secrets)
+
+    @fastapi_app.exception_handler(LLMTimeoutError)
+    async def handle_llm_timeout(_request: Request, exc: LLMTimeoutError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            content={"detail": _safe_detail(exc)},
+        )
+
+    @fastapi_app.exception_handler(LLMRateLimitError)
+    async def handle_llm_rate_limit(_request: Request, exc: LLMRateLimitError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={"detail": _safe_detail(exc)},
+        )
+
+    @fastapi_app.exception_handler(LLMConfigurationError)
+    async def handle_llm_config(_request: Request, exc: LLMConfigurationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": _safe_detail(exc)},
+        )
+
+    @fastapi_app.exception_handler(LLMProviderError)
+    async def handle_llm_provider(_request: Request, exc: LLMProviderError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            content={"detail": _safe_detail(exc)},
+        )
+
+    @fastapi_app.exception_handler(ExtractionValidationError)
+    async def handle_extraction_validation(
+        _request: Request, exc: ExtractionValidationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": _safe_detail(exc)},
+        )
+
+
 def create_app(
     settings: Optional[Settings] = None,
     llm_client: Optional[BaseLLMClient] = None,
@@ -46,6 +100,11 @@ def create_app(
     configure_logging(cfg)
 
     client = llm_client or create_llm_client(cfg)
+    allow_fallback = (
+        cfg.allow_deterministic_fallback
+        if cfg.allow_deterministic_fallback is not None
+        else (client.provider_name in {"mock", "mock_callable"})
+    )
     danger_detector = DangerDetector(
         danger_signs_path=cfg.danger_signs_path,
         llm_client=client,
@@ -54,6 +113,7 @@ def create_app(
         llm_client=client,
         max_retries=cfg.max_extraction_retries,
         timezone_name=cfg.app_timezone,
+        fallback_on_failure=allow_fallback,
     )
     correction_engine = CorrectionEngine(
         llm_client=client,
@@ -92,6 +152,7 @@ def create_app(
     fastapi_app.state.state_manager = state_manager
     fastapi_app.state.danger_detector = danger_detector
     fastapi_app.state.guardrails = guardrails
+    register_exception_handlers(fastapi_app, cfg)
 
     @fastapi_app.get("/health", tags=["System"])
     def health_check() -> Dict[str, Any]:
@@ -100,6 +161,10 @@ def create_app(
         return {
             "status": "ok",
             "llm_provider": client.provider_name,
+            "llm_mode": "mock" if client.provider_name in {"mock", "mock_callable"} else "live",
+            "llm_model_configured": bool(cfg.llm_model),
+            "require_real_llm": cfg.require_real_llm,
+            "gnani_configured": bool(os.getenv("GNANI_API_KEY")),
             "timezone": cfg.app_timezone,
             "supported_languages": list(SUPPORTED_GNANI_LANGUAGES.keys()),
             "code_mixing_supported": ["hi-en"],

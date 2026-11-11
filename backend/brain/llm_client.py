@@ -4,18 +4,105 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, Optional
 
 import httpx
 
-from config import Settings
+from config import Settings, scrub_secrets
 
 logger = logging.getLogger("asha_saathi.llm")
 
 
 class LLMProviderError(RuntimeError):
     """Raised when an external LLM provider call fails or is misconfigured."""
+
+
+class LLMConfigurationError(LLMProviderError):
+    """Raised when production or explicit real LLM configuration is incomplete or invalid."""
+
+
+class LLMTimeoutError(LLMProviderError):
+    """Raised when an external LLM request exceeds the configured timeout."""
+
+
+class LLMRateLimitError(LLMProviderError):
+    """Raised when an external LLM provider responds with HTTP 429 rate limiting."""
+
+
+def _post_json_with_retries(
+    url: str,
+    headers: Dict[str, str],
+    body: Dict[str, Any],
+    timeout_seconds: float,
+    api_key: str,
+    provider_label: str,
+    max_transient_retries: int = 1,
+) -> Dict[str, Any]:
+    """Send JSON POST to an LLM endpoint with safe retry and secret-redacted error mapping."""
+    transient_statuses = {429, 502, 503, 504}
+    last_exc: Optional[LLMProviderError] = None
+
+    for attempt in range(max_transient_retries + 1):
+        try:
+            with httpx.Client(timeout=timeout_seconds) as client:
+                response = client.post(url, headers=headers, json=body)
+
+            if response.status_code == 429:
+                last_exc = LLMRateLimitError(
+                    f"{provider_label} rate limit exceeded (HTTP 429)."
+                )
+                if attempt < max_transient_retries:
+                    retry_after_raw = response.headers.get("Retry-After", "0.2")
+                    try:
+                        delay = min(max(float(retry_after_raw), 0.05), 1.0)
+                    except ValueError:
+                        delay = 0.2
+                    time.sleep(delay)
+                    continue
+                raise last_exc
+
+            if response.status_code in transient_statuses:
+                last_exc = LLMProviderError(
+                    f"{provider_label} temporary server error (HTTP {response.status_code})."
+                )
+                if attempt < max_transient_retries:
+                    time.sleep(0.15)
+                    continue
+                raise last_exc
+
+            response.raise_for_status()
+            data = response.json()
+            if not isinstance(data, dict):
+                raise LLMProviderError(
+                    f"{provider_label} returned non-object JSON payload."
+                )
+            return data
+
+        except httpx.TimeoutException as exc:
+            last_exc = LLMTimeoutError(
+                f"{provider_label} request timed out after {timeout_seconds}s."
+            )
+            if attempt < max_transient_retries:
+                continue
+            raise last_exc from exc
+        except httpx.HTTPStatusError as exc:
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            safe_msg = scrub_secrets(
+                f"{provider_label} returned HTTP {status_code}.",
+                [api_key],
+            )
+            raise LLMProviderError(safe_msg) from exc
+        except (httpx.HTTPError, ValueError, TypeError) as exc:
+            safe_msg = scrub_secrets(
+                f"{provider_label} request failed: {exc}",
+                [api_key],
+            )
+            raise LLMProviderError(safe_msg) from exc
+
+    raise last_exc or LLMProviderError(f"{provider_label} request failed.")
 
 
 class BaseLLMClient(ABC):
@@ -131,9 +218,9 @@ class OpenAICompatibleLLMClient(BaseLLMClient):
         timeout_seconds: float = 20.0,
     ) -> None:
         if not api_key:
-            raise LLMProviderError("LLM_API_KEY is required for OpenAI-compatible provider.")
+            raise LLMConfigurationError("LLM_API_KEY is required for OpenAI-compatible provider.")
         if not model:
-            raise LLMProviderError("LLM_MODEL is required for OpenAI-compatible provider.")
+            raise LLMConfigurationError("LLM_MODEL is required for OpenAI-compatible provider.")
         self._api_key = api_key
         self._model = model
         self._base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
@@ -160,14 +247,23 @@ class OpenAICompatibleLLMClient(BaseLLMClient):
                 {"role": "user", "content": user_prompt},
             ],
         }
+        data = _post_json_with_retries(
+            url=url,
+            headers=headers,
+            body=body,
+            timeout_seconds=self._timeout,
+            api_key=self._api_key,
+            provider_label="OpenAI-compatible",
+        )
         try:
-            with httpx.Client(timeout=self._timeout) as client:
-                response = client.post(url, headers=headers, json=body)
-                response.raise_for_status()
-                data = response.json()
-            return data["choices"][0]["message"]["content"]
-        except (httpx.HTTPError, KeyError, IndexError, TypeError) as exc:
-            raise LLMProviderError(f"OpenAI-compatible request failed: {exc}") from exc
+            content = data["choices"][0]["message"]["content"]
+            if not isinstance(content, str) or not content.strip():
+                raise LLMProviderError("OpenAI-compatible response contained empty content.")
+            return content
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMProviderError(
+                "OpenAI-compatible response missing choices[0].message.content."
+            ) from exc
 
 
 class GeminiLLMClient(BaseLLMClient):
@@ -183,11 +279,11 @@ class GeminiLLMClient(BaseLLMClient):
         timeout_seconds: float = 20.0,
     ) -> None:
         if not api_key:
-            raise LLMProviderError("LLM_API_KEY is required for Gemini provider.")
+            raise LLMConfigurationError("LLM_API_KEY is required for Gemini provider.")
         if not model:
-            raise LLMProviderError("LLM_MODEL is required for Gemini provider.")
+            raise LLMConfigurationError("LLM_MODEL is required for Gemini provider.")
         self._api_key = api_key
-        self._model = model
+        self._model = model.removeprefix("models/")
         self._base_url = (
             base_url or "https://generativelanguage.googleapis.com/v1beta"
         ).rstrip("/")
@@ -200,7 +296,8 @@ class GeminiLLMClient(BaseLLMClient):
         task: str = "generic",
         metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
-        url = f"{self._base_url}/models/{self._model}:generateContent"
+        model_id = self._model.removeprefix("models/")
+        url = f"{self._base_url}/models/{model_id}:generateContent"
         headers = {
             "Content-Type": "application/json",
             "x-goog-api-key": self._api_key,
@@ -213,15 +310,28 @@ class GeminiLLMClient(BaseLLMClient):
                 "responseMimeType": "application/json",
             },
         }
+        data = _post_json_with_retries(
+            url=url,
+            headers=headers,
+            body=body,
+            timeout_seconds=self._timeout,
+            api_key=self._api_key,
+            provider_label="Gemini",
+        )
         try:
-            with httpx.Client(timeout=self._timeout) as client:
-                response = client.post(url, headers=headers, json=body)
-                response.raise_for_status()
-                data = response.json()
             parts = data["candidates"][0]["content"]["parts"]
-            return "".join(str(p.get("text", "")) for p in parts)
-        except (httpx.HTTPError, KeyError, IndexError, TypeError) as exc:
-            raise LLMProviderError(f"Gemini request failed: {exc}") from exc
+            text = "".join(
+                str(p.get("text", ""))
+                for p in parts
+                if isinstance(p, dict) and not p.get("thought")
+            )
+            if not text.strip():
+                raise LLMProviderError("Gemini response contained empty text parts.")
+            return text
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMProviderError(
+                "Gemini response missing candidates[0].content.parts."
+            ) from exc
 
 
 class AnthropicLLMClient(BaseLLMClient):
@@ -237,9 +347,9 @@ class AnthropicLLMClient(BaseLLMClient):
         timeout_seconds: float = 20.0,
     ) -> None:
         if not api_key:
-            raise LLMProviderError("LLM_API_KEY is required for Anthropic provider.")
+            raise LLMConfigurationError("LLM_API_KEY is required for Anthropic provider.")
         if not model:
-            raise LLMProviderError("LLM_MODEL is required for Anthropic provider.")
+            raise LLMConfigurationError("LLM_MODEL is required for Anthropic provider.")
         self._api_key = api_key
         self._model = model
         self._base_url = (base_url or "https://api.anthropic.com/v1").rstrip("/")
@@ -265,36 +375,73 @@ class AnthropicLLMClient(BaseLLMClient):
             "system": system_prompt,
             "messages": [{"role": "user", "content": user_prompt}],
         }
-        try:
-            with httpx.Client(timeout=self._timeout) as client:
-                response = client.post(url, headers=headers, json=body)
-                response.raise_for_status()
-                data = response.json()
-            blocks = data.get("content", [])
-            return "".join(str(b.get("text", "")) for b in blocks if b.get("type") == "text")
-        except (httpx.HTTPError, KeyError, TypeError) as exc:
-            raise LLMProviderError(f"Anthropic request failed: {exc}") from exc
+        data = _post_json_with_retries(
+            url=url,
+            headers=headers,
+            body=body,
+            timeout_seconds=self._timeout,
+            api_key=self._api_key,
+            provider_label="Anthropic",
+        )
+        blocks = data.get("content", [])
+        if not isinstance(blocks, list):
+            raise LLMProviderError("Anthropic response missing content list.")
+        text = "".join(
+            str(b.get("text", ""))
+            for b in blocks
+            if isinstance(b, dict) and b.get("type") == "text"
+        )
+        if not text.strip():
+            raise LLMProviderError("Anthropic response contained empty content text.")
+        return text
+
+
+def _infer_auto_provider() -> str:
+    if os.getenv("LLM_API_KEY", "").strip() or os.getenv("OPENAI_API_KEY", "").strip():
+        return "openai_compatible"
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        return "gemini"
+    if os.getenv("ANTHROPIC_API_KEY", "").strip():
+        return "anthropic"
+    return "openai_compatible"
 
 
 def create_llm_client(settings: Settings) -> BaseLLMClient:
-    """Instantiate the configured LLM provider, falling back to Mock if explicitly set or auto without keys."""
-    provider = settings.llm_provider.lower()
+    """Instantiate configured LLM provider; never silently downgrade explicit real providers to mock."""
+    provider = settings.llm_provider.strip().lower() or "mock"
+
     if provider == "mock":
+        if settings.require_real_llm:
+            raise LLMConfigurationError(
+                "REQUIRE_REAL_LLM / production mode is active; mock LLM_PROVIDER cannot be used."
+            )
         logger.info("LLM provider initialized in mock mode")
         return MockLLMClient()
 
     if provider == "auto":
-        if not settings.llm_api_key or not settings.llm_model:
-            logger.info("LLM credentials/model not configured; using mock provider")
+        if settings.llm_api_key and settings.llm_model:
+            provider = _infer_auto_provider()
+        elif settings.require_real_llm:
+            raise LLMConfigurationError(
+                "Production mode requires real LLM credentials (LLM_API_KEY and LLM_MODEL); refusing silent mock fallback."
+            )
+        else:
+            logger.info("LLM credentials/model not configured in dev 'auto' mode; using mock provider")
             return MockLLMClient()
-        provider = "openai_compatible"
+
+    if provider not in {"openai", "openai_compatible", "gemini", "anthropic"}:
+        raise LLMConfigurationError(f"Unsupported LLM_PROVIDER: {settings.llm_provider}")
 
     if not settings.llm_api_key or not settings.llm_model:
-        logger.warning(
-            "Provider '%s' selected without LLM_API_KEY or LLM_MODEL; falling back to mock mode",
-            provider,
+        missing = []
+        if not settings.llm_api_key:
+            missing.append("LLM_API_KEY (or provider API key)")
+        if not settings.llm_model:
+            missing.append("LLM_MODEL")
+        raise LLMConfigurationError(
+            f"Real LLM provider '{provider}' requested without {', '.join(missing)}. "
+            "Refusing silent fallback to mock mode."
         )
-        return MockLLMClient()
 
     if provider in {"openai", "openai_compatible"}:
         return OpenAICompatibleLLMClient(
@@ -310,12 +457,9 @@ def create_llm_client(settings: Settings) -> BaseLLMClient:
             base_url=settings.llm_base_url,
             timeout_seconds=settings.llm_timeout_seconds,
         )
-    if provider == "anthropic":
-        return AnthropicLLMClient(
-            api_key=settings.llm_api_key,
-            model=settings.llm_model,
-            base_url=settings.llm_base_url,
-            timeout_seconds=settings.llm_timeout_seconds,
-        )
-
-    raise LLMProviderError(f"Unsupported LLM_PROVIDER: {settings.llm_provider}")
+    return AnthropicLLMClient(
+        api_key=settings.llm_api_key,
+        model=settings.llm_model,
+        base_url=settings.llm_base_url,
+        timeout_seconds=settings.llm_timeout_seconds,
+    )

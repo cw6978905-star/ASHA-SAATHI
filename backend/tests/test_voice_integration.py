@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import os
 import subprocess
 import sys
 from datetime import date
@@ -186,9 +187,11 @@ def test_direct_brain_import_from_voice_directory_works_without_package_shadowin
         "assert r['form_state']['beneficiary_name'] == 'Priya Devi'; "
         "print('OK')"
     )
+    env = {**os.environ, "LLM_PROVIDER": "mock"}
     proc = subprocess.run(
         [sys.executable, "-c", script],
         cwd=str(VOICE_DIR),
+        env=env,
         capture_output=True,
         text=True,
         check=True,

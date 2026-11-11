@@ -404,11 +404,18 @@ class CorrectionEngine:
                         "timezone": self._timezone,
                     },
                 )
-                llm_data = json.loads(raw)
-                if llm_data.get("corrections"):
+                cleaned_raw = raw.strip()
+                fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_raw, re.DOTALL | re.I)
+                if fence:
+                    cleaned_raw = fence.group(1).strip()
+                llm_data = json.loads(cleaned_raw)
+                if isinstance(llm_data, dict) and llm_data.get("corrections"):
                     det_dict = llm_data
                     det_dict.setdefault("validation_errors", [])
-            except (LLMProviderError, json.JSONDecodeError, TypeError, ValueError):
+            except LLMProviderError:
+                if self._llm.provider_name not in {"mock", "mock_callable"} and not det_dict.get("corrections"):
+                    raise
+            except (json.JSONDecodeError, TypeError, ValueError):
                 pass
 
         candidates = [

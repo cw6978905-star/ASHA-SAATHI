@@ -1,10 +1,12 @@
 import asyncio
 import base64
 import json
+import logging
 import os
 import sys
+import time
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 import websockets
 from dotenv import load_dotenv
@@ -19,18 +21,24 @@ for _path in (str(REPO_ROOT), str(BACKEND_DIR)):
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from brain.llm_client import BaseLLMClient  # noqa: E402
-from config import Settings  # noqa: E402
+from brain.extraction import ExtractionValidationError  # noqa: E402
+from brain.llm_client import BaseLLMClient, LLMProviderError  # noqa: E402
+from config import Settings, scrub_secrets  # noqa: E402
+from main import register_exception_handlers  # noqa: E402
 from voice.brain import (  # noqa: E402
     configure_brain_app,
     get_brain_app,
     get_intro_message,
+    get_state_manager,
     on_transcript,
 )
 
 load_dotenv(dotenv_path=VOICE_DIR / ".env", override=False)
+load_dotenv(dotenv_path=BACKEND_DIR / ".env", override=False)
+load_dotenv(dotenv_path=REPO_ROOT / ".env", override=False)
 load_dotenv(override=False)
 KEY = os.getenv("GNANI_API_KEY")
+logger = logging.getLogger("asha_saathi.voice_server")
 
 STT_URL = "wss://api.vachana.ai/stt/v3/stream"
 STT_HEADERS = {
@@ -57,11 +65,30 @@ SAMPLE_RATE = 16000
 DISCLOSURE = get_intro_message("hi-en")
 
 
+def _get_stt_headers() -> Dict[str, Optional[str]]:
+    headers = dict(STT_HEADERS)
+    headers["x-api-key-id"] = os.getenv("GNANI_API_KEY") or KEY
+    return headers
+
+
+def _get_tts_headers() -> Dict[str, Optional[str]]:
+    headers = dict(TTS_HEADERS)
+    headers["X-API-Key-ID"] = os.getenv("GNANI_API_KEY") or KEY
+    return headers
+
+
+def _scrub_voice_error(exc: Exception) -> str:
+    return scrub_secrets(
+        str(exc),
+        [os.getenv("GNANI_API_KEY"), KEY, os.getenv("LLM_API_KEY")],
+    )
+
+
 async def speak(browser: WebSocket, text: str, language: str = "auto"):
     await browser.send_text(json.dumps({"type": "tts_start"}))
     try:
         async with websockets.connect(
-            TTS_URL, additional_headers=TTS_HEADERS
+            TTS_URL, additional_headers=_get_tts_headers()
         ) as tts:
             await tts.send(json.dumps({
                 "text": text,
@@ -85,12 +112,16 @@ async def speak(browser: WebSocket, text: str, language: str = "auto"):
                     if audio:
                         await browser.send_bytes(audio)
                 elif kind == "error":
-                    print("TTS error:", msg.get("message"))
+                    safe_tts_err = scrub_secrets(
+                        str(msg.get("message") or "TTS error"),
+                        [os.getenv("GNANI_API_KEY"), KEY],
+                    )
+                    logger.warning("TTS error: %s", safe_tts_err)
                     break
                 elif kind == "complete":
                     break
     except Exception as e:
-        print("speak error:", e)
+        logger.warning("speak error: %s", _scrub_voice_error(e))
     finally:
         try:
             await browser.send_text(json.dumps({"type": "tts_end"}))
@@ -120,6 +151,7 @@ def create_voice_app(
         allow_headers=["*"],
     )
     voice_app.include_router(brain_app.router)
+    register_exception_handlers(voice_app, brain_app.state.settings)
     voice_app.state.brain_app = brain_app
     voice_app.state.state_manager = brain_app.state.state_manager
     voice_app.state.settings = brain_app.state.settings
@@ -147,7 +179,7 @@ def create_voice_app(
 
         try:
             async with websockets.connect(
-                STT_URL, additional_headers=STT_HEADERS
+                STT_URL, additional_headers=_get_stt_headers()
             ) as gnani:
 
                 async def up():  # browser -> server
@@ -188,7 +220,17 @@ def create_voice_app(
                                     or payload.get("language")
                                 )
                                 if isinstance(pref, str) and pref.strip():
-                                    session["preferred_language"] = pref.strip()
+                                    cleaned_pref = pref.strip()
+                                    session["preferred_language"] = cleaned_pref
+                                    sid = session.get("session_id")
+                                    if sid and get_state_manager().get_session(sid):
+                                        try:
+                                            get_state_manager().set_session_language(
+                                                sid, cleaned_pref
+                                            )
+                                            session["language"] = cleaned_pref
+                                        except ValueError:
+                                            pass
 
                 async def down():  # Gnani STT -> browser (+ AI Brain reply)
                     async for raw in gnani:
@@ -204,12 +246,23 @@ def create_voice_app(
                                 or m.get("language")
                                 or m.get("language_code")
                             )
-                            result = await asyncio.to_thread(
-                                on_transcript,
-                                transcript_text,
-                                session,
-                                detected_language=det_lang,
-                            )
+                            t0 = time.perf_counter()
+                            try:
+                                result = await asyncio.to_thread(
+                                    on_transcript,
+                                    transcript_text,
+                                    session,
+                                    detected_language=det_lang,
+                                )
+                            except (LLMProviderError, ExtractionValidationError, Exception) as exc:
+                                safe_err = _scrub_voice_error(exc)
+                                logger.warning("Brain turn failed over /ws: %s", safe_err)
+                                await browser.send_text(json.dumps({
+                                    "type": "error",
+                                    "message": safe_err,
+                                }))
+                                continue
+                            brain_latency_ms = round((time.perf_counter() - t0) * 1000, 1)
                             await browser.send_text(json.dumps({
                                 "type": "brain",
                                 "session_id": result.get("session_id"),
@@ -222,6 +275,7 @@ def create_voice_app(
                                 "language_switched": result.get(
                                     "language_switched", False
                                 ),
+                                "latency_ms": brain_latency_ms,
                                 "form_state": result.get("form_state"),
                                 "missing_fields": result.get("missing_fields", []),
                                 "danger_flag": result.get("danger_flag", False),
@@ -253,7 +307,15 @@ def create_voice_app(
                 for t in pending:
                     t.cancel()
         except Exception as e:
-            print("session error:", e)
+            safe_err = _scrub_voice_error(e)
+            logger.warning("Voice WebSocket session error: %s", safe_err)
+            try:
+                await browser.send_text(json.dumps({
+                    "type": "error",
+                    "message": safe_err,
+                }))
+            except Exception:
+                pass
         finally:
             stop_speaking()
 
