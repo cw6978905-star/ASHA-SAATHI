@@ -147,6 +147,12 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    from fastapi.staticfiles import StaticFiles
+    import os
+
+    frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../app"))
+    if os.path.exists(frontend_path):
+        fastapi_app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="app")
 
     fastapi_app.state.settings = cfg
     fastapi_app.state.state_manager = state_manager
