@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Traditional Header with Decorative Motif -->
+    <!-- Traditional Header with Decorative Motif & Language Selector -->
     <header class="app-header">
       <div class="brand-title">
         <span class="lotus-icon">🪷</span>
@@ -19,7 +19,21 @@
           <p class="subtitle">आषा साथी • Voice Field Assistant</p>
         </div>
       </div>
-      <div class="status-badge" id="status-badge">Ready</div>
+      <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
+        <select id="language-select" class="lang-dropdown" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif;">
+          <option value="hi-IN">🇮🇳 Hindi (हिन्दी)</option>
+          <option value="en-IN">🇬🇧 English</option>
+          <option value="ta-IN">🇮🇳 Tamil (தமிழ்)</option>
+          <option value="te-IN">🇮🇳 Telugu (తెలుగు)</option>
+          <option value="bn-IN">🇮🇳 Bengali (বাংলা)</option>
+          <option value="mr-IN">🇮🇳 Marathi (मराठी)</option>
+          <option value="gu-IN">🇮🇳 Gujarati (ગુજરાતી)</option>
+          <option value="kn-IN">🇮🇳 Kannada (ಕನ್ನಡ)</option>
+          <option value="ml-IN">🇮🇳 Malayalam (മലയാളം)</option>
+          <option value="pa-IN">🇮🇳 Punjabi (ਪੰਜਾਬੀ)</option>
+        </select>
+        <div class="status-badge" id="status-badge">Ready</div>
+      </div>
     </header>
 
     <!-- AI Disclosure Banner -->
@@ -50,7 +64,7 @@
     <section class="card-traditional">
       <h3>📜 Live Transcript</h3>
       <div class="transcript-box" id="transcript-box">
-        <em>Listening for voice input in Hindi/Regional mix...</em>
+        <em>Listening for voice input in selected language...</em>
       </div>
     </section>
 
@@ -82,7 +96,7 @@
       </form>
     </section>
 
-    <!-- Follow-up List (Innovation Point) -->
+    <!-- Follow-up List -->
     <section class="card-traditional">
       <h3>🗓️ Upcoming Follow-ups & Vaccinations</h3>
       <ul id="followup-list" class="followup-list">
