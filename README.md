@@ -35,3 +35,22 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+## 🏛️ Public Health Compliance, Guardrails & Danger-Sign Citation
+
+### Clinical Guideline Citations
+Our danger-sign escalation dataset (`backend/data/danger_signs.json`) is strictly derived from official Government of India and WHO maternal and neonatal community health worker guidelines:
+1. **Ministry of Health & Family Welfare (MoHFW), Govt. of India** — *ASHA Training Module 6 & 7: Skills that Saves Lives (Maternal & Newborn Care)* & *Guidelines for Antenatal Care and Skilled Attendance at Birth by ANMs/LHVs/SNs*.
+2. **World Health Organization (WHO)** — *Counselling for Maternal and Newborn Health Care: A Handbook for Building Skills* (Danger Signs in Pregnancy, Postpartum, and Newborn).
+
+### Tracked Danger-Sign Escalation List
+When any of the following red-flag symptoms are detected in an ASHA worker's spoken notes, the system immediately halts routine logging, triggers an urgent **PHC (Primary Health Centre) Referral** alert in the worker's language, and enforces strict non-diagnostic guardrails (no medication or home-remedy advice):
+
+| Category | Tracked Danger Signs | Immediate Protocol |
+| :--- | :--- | :--- |
+| **Maternal (ANC / PNC)** | Vaginal bleeding during pregnancy or heavy postpartum bleeding, severe abdominal pain, severe headache with blurred vision, high fever, convulsions / fits, reduced or absent fetal movement, severe swelling of face/hands | Urgent PHC / FRU Referral (`refer_danger`) |
+| **Newborn / Infant** | High fever or hypothermia (cold to touch), difficulty breathing / chest indrawing, inability to feed / poor sucking, lethargy or unconsciousness, umbilical cord redness/pus, convulsions | Urgent SNCU / PHC Referral (`refer_danger`) |
+
+### Data Privacy & Synthetic Data Policy
+- **Synthetic Beneficiaries Only:** All beneficiary names, IDs, and clinical records used in testing and demos are 100% synthetic. No real patient PII/PHI is stored or transmitted.
+- **Zero-Diagnosis Guardrail:** The AI assistant strictly acts as a structured documentation and triage-escalation tool; it refuses to prescribe medication or offer clinical diagnoses.
